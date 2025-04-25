@@ -1,0 +1,75 @@
+{
+    "players": [
+      {
+        "name": "Ella",
+        "rolePreferences": ["Vanguard", "Duelist", "Strategist"],
+        "main": "Spider-Man"
+      },
+      {
+        "name": "Jaxen",
+        "rolePreferences": ["Vanguard", "Duelist", "Strategist"]
+      },
+      {
+        "name": "Cam",
+        "rolePreferences": ["Vanguard", "Duelist", "Strategist"]
+      },
+      {
+        "name": "Will",
+        "rolePreferences": ["Vanguard", "Duelist", "Strategist"]
+      },
+      {
+        "name": "Clint",
+        "rolePreferences": ["Vanguard", "Duelist", "Strategist"]
+      },
+      {
+        "name": "Dimitri",
+        "rolePreferences": ["Vanguard", "Duelist", "Strategist"]
+      },
+      {
+        "name": "Terren",
+        "rolePreferences": ["Vanguard", "Duelist", "Strategist"]
+      },
+      {
+        "name": "Jacob",
+        "rolePreferences": ["Vanguard", "Duelist", "Strategist"]
+      },
+      {
+        "name": "Kaleo",
+        "rolePreferences": ["Vanguard", "Duelist", "Strategist"]
+      },
+      {
+        "name": "Marcus",
+        "rolePreferences": ["Vanguard", "Duelist", "Strategist"]
+      },
+      {
+        "name": "Jean",
+        "rolePreferences": ["Vanguard", "Duelist", "Strategist"]
+      },
+      {
+        "name": "Trey",
+        "rolePreferences": ["Vanguard", "Duelist", "Strategist"]
+      },
+      {
+        "name": "Amber",
+        "rolePreferences": ["Vanguard", "Duelist", "Strategist"]
+      },
+      {
+        "name": "Xandyr",
+        "rolePreferences": ["Vanguard", "Duelist", "Strategist"]
+      },
+      {
+        "name": "Bhe",
+        "rolePreferences": ["Vanguard", "Duelist", "Strategist"]
+      }
+    ],
+    "teamComps": {
+      "Trinity Protocol": [2, 2, 2],
+      "Mastermind's Gambit": [1, 2, 3],
+      "Titan Formation": [3, 1, 2],
+      "The Immovable Wall": [4, 0, 2],
+      "Juggernaut Rush": [6, 0, 0],
+      "Blitzkrieg Unit": [0, 4, 2],
+      "Doom's Chessboard": [0, 0, 6],
+      "Edge of Chaos": [0, 6, 0]
+  }
+  }
