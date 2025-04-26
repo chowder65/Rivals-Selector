@@ -16,24 +16,7 @@ class ErrorBoundary extends Component {
   }
 }
 
-const HERO_ROLES = {
-  vanguards: [
-    "Captain America", "Doctor Strange", "Groot", "Hulk", "Magneto", 
-    "The Thing", "Thor", "Venom", "Peni Parker"
-  ],
-  duelists: [
-    "Hawkeye", "Hela", "Human Torch", "Iron Fist", "Iron Man", "Magik", 
-    "Mister Fantastic", "Moon Knight", "Psylocke", "Black Panther", 
-    "Scarlet Witch", "Spider-Man", "Squirrel Girl", "Star-Lord", "Storm",
-    "Winter Soldier", "Wolverine", "Black Widow", "Namor", "Punisher"
-  ],
-  strategists: [
-    "Adam Warlock", "Cloak & Dagger", "Invisible Woman", "Jeff the Land Shark", 
-    "Luna Snow", "Mantis", "Rocket Raccoon", "Loki"
-  ]
-};
-
-export default function GameScreen({ lobbySettings, players }) {
+export default function GameScreen({ lobbySettings, players, teamComposition, assignments }) {
   const [heroes, setHeroes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -43,13 +26,10 @@ export default function GameScreen({ lobbySettings, players }) {
   useEffect(() => {
     const loadHeroes = async () => {
       try {
-        // Convert HERO_ROLES to array of { name, role } objects
-        const mockHeroes = [
-          ...HERO_ROLES.vanguards.map(name => ({ name, role: 'vanguard' })),
-          ...HERO_ROLES.duelists.map(name => ({ name, role: 'duelist' })),
-          ...HERO_ROLES.strategists.map(name => ({ name, role: 'strategist' }))
-        ];
-        console.log('Using mock heroes:', mockHeroes);
+        const mockHeroes = Object.values(assignments)
+          .filter(a => a.hero)
+          .map(a => a.hero);
+        console.log('Using heroes from assignments:', mockHeroes);
         setHeroes(mockHeroes);
       } catch (err) {
         console.error('Hero load error:', err.message);
@@ -59,9 +39,9 @@ export default function GameScreen({ lobbySettings, players }) {
       }
     };
     loadHeroes();
-  }, []);
+  }, [assignments]);
 
-  console.log('GameScreen props:', { lobbySettings, players });
+  console.log('GameScreen props:', { lobbySettings, players, teamComposition, assignments });
 
   if (loading) return <div>Loading heroes...</div>;
   if (error) return <div>Error: {error}. Please try again later.</div>;
@@ -84,6 +64,8 @@ export default function GameScreen({ lobbySettings, players }) {
               .filter(p => p.settings?.selectedRole)
               .map(p => [p.id, p.settings.selectedRole])
           )}
+          teamComposition={teamComposition}
+          assignments={assignments}
         />
       </div>
     </ErrorBoundary>

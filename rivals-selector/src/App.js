@@ -11,8 +11,9 @@ function App() {
   const [players, setPlayers] = useState([]);
   const [connectionStatus, setConnectionStatus] = useState('disconnected');
   const [lastUpdate, setLastUpdate] = useState(Date.now());
+  const [teamComposition, setTeamComposition] = useState(null);
+  const [assignments, setAssignments] = useState({});
 
-  // Memoize players to prevent unnecessary re-renders
   const stablePlayers = useMemo(() => players, [players]);
 
   const handleReadyUp = useCallback((playerId) => {
@@ -39,7 +40,11 @@ function App() {
         setPlayers(prev => prev.filter(p => p.id !== message.playerId));
         break;
       case 'game_start':
+        console.log('Received game_start:', message);
         setLobbySettings(message.settings);
+        setPlayers(message.players || []);
+        setTeamComposition(message.teamComposition || null);
+        setAssignments(message.assignments || {});
         setCurrentScreen('game');
         break;
       case 'initial_state':
@@ -58,6 +63,9 @@ function App() {
         break;
       case 'player_list_update':
         setPlayers(message.players);
+        break;
+      case 'all_ready':
+        console.log('All players ready');
         break;
       case 'heartbeat':
         sendWebSocketMessage({ type: 'heartbeat_response' });
@@ -129,6 +137,8 @@ function App() {
         <GameScreen 
           lobbySettings={lobbySettings} 
           players={stablePlayers}
+          teamComposition={teamComposition}
+          assignments={assignments}
         />
       )}
     </div>
