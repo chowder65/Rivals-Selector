@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { connectWebSocket, sendWebSocketMessage } from './services/socket';
 import LobbyScreen from './components/LobbyScreen';
 import GameScreen from './components/GameScreen';
@@ -11,6 +11,9 @@ function App() {
   const [players, setPlayers] = useState([]);
   const [connectionStatus, setConnectionStatus] = useState('disconnected');
 
+  // Memoize players array to prevent unnecessary re-renders
+  const stablePlayers = useMemo(() => players, [JSON.stringify(players)]);
+
   const handleReadyUp = (playerId) => {
     sendWebSocketMessage({
       type: 'player_ready',
@@ -20,7 +23,7 @@ function App() {
   };
 
   useEffect(() => {
-    const wsUrl = `ws://${window.location.hostname === 'localhost' ? 'localhost:8080' : '67.169.249.206:8080'}`;
+    const wsUrl = `ws://${window.location.hostname === 'localhost' ? 'localhost:8080' : 'your-server-url:8080'}`;
     console.log('Attempting to connect to:', wsUrl);
     
     const cleanup = connectWebSocket(wsUrl, (message) => {
@@ -85,13 +88,13 @@ function App() {
       {currentScreen === 'lobby' ? (
         <LobbyScreen 
           onJoinLobby={handleJoinLobby} 
-          players={players}
+          players={stablePlayers}
           onReadyUp={handleReadyUp}
         />
       ) : (
         <GameScreen 
           lobbySettings={lobbySettings} 
-          players={players}
+          players={stablePlayers}
         />
       )}
     </div>

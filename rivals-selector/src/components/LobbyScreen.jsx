@@ -8,12 +8,14 @@ function LobbyScreen({ onJoinLobby, players = [], onReadyUp }) {
   const [isReady, setIsReady] = useState(false);
   const [teamCompVote, setTeamCompVote] = useState(null);
   const [currentPlayerId, setCurrentPlayerId] = useState(null);
+  const [selectedRole, setSelectedRole] = useState(null);
 
   const gameModes = [
-    { id: 'normal', label: 'Normal Mode' },
+    { id: 'normal', label: 'Normal Mode (2-2-2)' },
     { id: 'full-random', label: 'Full Random (Random Teams & Heroes)' },
-    { id: 'random-heroes', label: 'Random Heroes Only' },
-    { id: 'random-teams', label: 'Random Team Comps Only' }
+    { id: 'random-heroes', label: 'Random Heroes Only (2-2-2)' },
+    { id: 'random-teams', label: 'Random Team Comps Only' },
+    { id: 'role-queue', label: 'Role Queue (Choose Your Role)' }
   ];
 
   const teamComps = [
@@ -22,24 +24,34 @@ function LobbyScreen({ onJoinLobby, players = [], onReadyUp }) {
     { id: '2-3-1', label: '2 Vanguards / 3 Duelists / 1 Strategist' }
   ];
 
+  const roles = [
+    { id: 'vanguard', label: 'Vanguard' },
+    { id: 'duelist', label: 'Duelist' },
+    { id: 'strategist', label: 'Strategist' }
+  ];
+
   const handleStartGame = () => {
     sendWebSocketMessage({
       type: 'start_game',
       settings: {
         modeVote,
-        teamCompVote: modeVote === 'random-teams' ? teamCompVote : '2-2-2'
+        teamCompVote: modeVote === 'random-teams' ? teamCompVote : '2-2-2',
+        selectedRole: modeVote === 'role-queue' ? selectedRole : null
       }
     });
   };
 
   const handleSubmit = () => {
     if (!playerName || !modeVote) return;
+    if (modeVote === 'role-queue' && !selectedRole) return;
+    
     const playerId = uuidv4();
     setCurrentPlayerId(playerId);
     onJoinLobby({
       playerName,
       modeVote,
-      teamCompVote: modeVote === 'random-teams' ? teamCompVote : '2-2-2'
+      teamCompVote: modeVote === 'random-teams' ? teamCompVote : '2-2-2',
+      selectedRole: modeVote === 'role-queue' ? selectedRole : null
     });
     setIsReady(true);
     onReadyUp(playerId);
@@ -66,8 +78,12 @@ function LobbyScreen({ onJoinLobby, players = [], onReadyUp }) {
             <input
               type="radio"
               id={mode.id}
+              name="gameMode"
               checked={modeVote === mode.id}
-              onChange={() => setModeVote(mode.id)}
+              onChange={() => {
+                setModeVote(mode.id);
+                setSelectedRole(null);
+              }}
               disabled={isReady}
             />
             <label htmlFor={mode.id}>{mode.label}</label>
@@ -94,11 +110,30 @@ function LobbyScreen({ onJoinLobby, players = [], onReadyUp }) {
         </div>
       )}
 
+      {modeVote === 'role-queue' && (
+        <div className="role-selection">
+          <h2>Select Your Role:</h2>
+          {roles.map(role => (
+            <div key={role.id} className="role-option">
+              <input
+                type="radio"
+                id={role.id}
+                name="playerRole"
+                checked={selectedRole === role.id}
+                onChange={() => setSelectedRole(role.id)}
+                disabled={isReady}
+              />
+              <label htmlFor={role.id}>{role.label}</label>
+            </div>
+          ))}
+        </div>
+      )}
+
       <div className="action-buttons">
         {!isReady ? (
           <button 
             onClick={handleSubmit}
-            disabled={!playerName || !modeVote}
+            disabled={!playerName || !modeVote || (modeVote === 'role-queue' && !selectedRole)}
             className="ready-button"
           >
             Ready Up
@@ -126,6 +161,9 @@ function LobbyScreen({ onJoinLobby, players = [], onReadyUp }) {
               className="player-item"
             >
               <span className="player-name">{player.name}</span>
+              {player.selectedRole && (
+                <span className="player-role">({player.selectedRole})</span>
+              )}
               {player.isReady && (
                 <span className="ready-indicator">✓ Ready</span>
               )}

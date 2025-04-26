@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import TeamGenerator from './TeamGenerator';
 import { fetchAllHeroesWithImages } from '../services/marvelApi';
 
@@ -6,6 +6,9 @@ export default function GameScreen({ lobbySettings, players }) {
   const [heroes, setHeroes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Memoize players to prevent unnecessary re-renders
+  const stablePlayers = useMemo(() => players, [JSON.stringify(players)]);
 
   useEffect(() => {
     const loadHeroes = async () => {
@@ -35,7 +38,12 @@ export default function GameScreen({ lobbySettings, players }) {
         mode={lobbySettings.modeVote}
         teamComp={lobbySettings.teamCompVote || '2-2-2'}
         heroes={heroes}
-        players={players}
+        players={stablePlayers}
+        selectedRoles={Object.fromEntries(
+          stablePlayers
+            .filter(p => p.settings?.selectedRole)
+            .map(p => [p.id, p.settings.selectedRole])
+        )}
       />
     </div>
   );
