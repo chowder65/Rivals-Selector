@@ -6,9 +6,7 @@ let isManualClose = false;
 let connectionId = null;
 
 const createSocket = (url, messageHandler) => {
-    // Cleanup previous connection
     if (socket) {
-      // Replace removeAllListeners with proper cleanup
       socket.onopen = null;
       socket.onmessage = null;
       socket.onclose = null;
@@ -49,7 +47,7 @@ const createSocket = (url, messageHandler) => {
     socket.onerror = (error) => {
       console.error('WebSocket error:', error);
     };
-  };
+};
 
 export const connectWebSocket = (url, messageHandler) => {
   reconnectAttempts = 0;
@@ -68,11 +66,10 @@ export const sendWebSocketMessage = (message) => {
   if (socket?.readyState === WebSocket.OPEN) {
     socket.send(JSON.stringify({
       ...message,
-      connectionId, // Include connection ID in all messages
+      connectionId,
       timestamp: Date.now()
     }));
   } else {
     console.warn('Cannot send - WebSocket not connected');
-    // Optionally queue messages for when connection is restored
   }
 };

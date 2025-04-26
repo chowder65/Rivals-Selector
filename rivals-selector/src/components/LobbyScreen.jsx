@@ -1,11 +1,13 @@
 import { useState } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 import { sendWebSocketMessage } from '../services/socket';
 
-function LobbyScreen({ onJoinLobby, players = [] }) {
+function LobbyScreen({ onJoinLobby, players = [], onReadyUp }) {
   const [playerName, setPlayerName] = useState('');
   const [modeVote, setModeVote] = useState(null);
   const [isReady, setIsReady] = useState(false);
   const [teamCompVote, setTeamCompVote] = useState(null);
+  const [currentPlayerId, setCurrentPlayerId] = useState(null);
 
   const gameModes = [
     { id: 'normal', label: 'Normal Mode' },
@@ -32,12 +34,15 @@ function LobbyScreen({ onJoinLobby, players = [] }) {
 
   const handleSubmit = () => {
     if (!playerName || !modeVote) return;
+    const playerId = uuidv4();
+    setCurrentPlayerId(playerId);
     onJoinLobby({
       playerName,
       modeVote,
       teamCompVote: modeVote === 'random-teams' ? teamCompVote : '2-2-2'
     });
     setIsReady(true);
+    onReadyUp(playerId);
   };
 
   return (
@@ -89,24 +94,42 @@ function LobbyScreen({ onJoinLobby, players = [] }) {
         </div>
       )}
 
-        {isReady && (
-        <button onClick={handleStartGame}>
-            Start Game
-        </button>
+      <div className="action-buttons">
+        {!isReady ? (
+          <button 
+            onClick={handleSubmit}
+            disabled={!playerName || !modeVote}
+            className="ready-button"
+          >
+            Ready Up
+          </button>
+        ) : (
+          <p className="ready-message">You're ready!</p>
         )}
-
-      <button 
-        onClick={handleSubmit}
-        disabled={!playerName || !modeVote || isReady}
-      >
-        {isReady ? 'Waiting for others...' : 'Ready Up'}
-      </button>
+        
+        <button 
+          onClick={handleStartGame}
+          disabled={players.length < 1}
+          className="start-game-button"
+        >
+          Start Game
+        </button>
+      </div>
 
       <div className="players-list">
         <h3>Connected Players ({players.length})</h3>
         <ul>
           {players.map(player => (
-            <li key={player.id}>{player.name}</li>
+            <li 
+              key={player.id} 
+              data-ready={player.isReady}
+              className="player-item"
+            >
+              <span className="player-name">{player.name}</span>
+              {player.isReady && (
+                <span className="ready-indicator">✓ Ready</span>
+              )}
+            </li>
           ))}
         </ul>
       </div>
