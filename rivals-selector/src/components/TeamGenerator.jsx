@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 
 export default function TeamGenerator({ 
   mode = 'normal',
@@ -11,11 +11,11 @@ export default function TeamGenerator({
   const [teamComposition, setTeamComposition] = useState(null);
   const prevDataRef = useRef({ players: [], heroes: [] });
 
-  const shuffleArray = (array) => {
+  const shuffleArray = useCallback((array) => {
     return [...array].sort(() => Math.random() - 0.5);
-  };
+  }, []);
 
-  const generateTeamComposition = () => {
+  const generateTeamComposition = useCallback(() => {
     if (mode === 'full-random') {
       let team1Comp, team2Comp;
       
@@ -64,12 +64,14 @@ export default function TeamGenerator({
           strategists: roleCounts.strategist - Math.floor(roleCounts.strategist / 2)
         }
       };
+    } else {
+      // normal and random-heroes modes use 2-2-2
+      return {
+        team1: { vanguards: 2, duelists: 2, strategists: 2 },
+        team2: { vanguards: 2, duelists: 2, strategists: 2 }
+      };
     }
-    return {
-      team1: { vanguards: 2, duelists: 2, strategists: 2 },
-      team2: { vanguards: 2, duelists: 2, strategists: 2 }
-    };
-  };
+  }, [mode, teamComp, selectedRoles]);
 
   const formatComposition = (comp) => {
     return `${comp.vanguards}V ${comp.duelists}D ${comp.strategists}S`;
@@ -90,24 +92,24 @@ export default function TeamGenerator({
       const team2Max = Object.values(comp.team2).reduce((a, b) => a + b, 0);
 
       // Filter out any undefined heroes and ensure they have roles
-      const validHeroes = heroes.filter(hero => hero && hero.role);
+      const validHeroes = heroes.filter(hero => hero && hero.role && ['vanguard', 'duelist', 'strategist'].includes(hero.role.toLowerCase()));
       const shuffledHeroes = shuffleArray(validHeroes);
 
       const sortedPlayers = mode === 'role-queue'
         ? [...players].sort((a, b) => {
-            const roleOrder = { vanguard: 1, duelist: 2, strategist: 3 };
             const roleA = selectedRoles[a.id] || '';
             const roleB = selectedRoles[b.id] || '';
-            return roleOrder[roleA] - roleOrder[roleB];
+            return roleA.localeCompare(roleB);
           })
         : shuffleArray([...players]);
 
       sortedPlayers.forEach((player) => {
         if (!player) return;
 
-        let hero;
+        let hero = null;
         let team;
         
+        // Assign team (balanced distribution)
         if (team1Count < team1Max && (team2Count >= team2Max || Math.random() > 0.5)) {
           team = 'team1';
           team1Count++;
@@ -116,18 +118,21 @@ export default function TeamGenerator({
           team2Count++;
         }
 
-        if (mode === 'role-queue' && selectedRoles[player.id]) {
-          const playerRole = selectedRoles[player.id]?.toLowerCase();
-          const roleHeroes = shuffledHeroes.filter(h => 
-            h.role?.toLowerCase() === playerRole
-          );
-          hero = roleHeroes.length > 0 
-            ? roleHeroes[Math.floor(Math.random() * roleHeroes.length)]
-            : shuffledHeroes[0];
-        } else {
-          hero = shuffledHeroes.length > 0
-            ? shuffledHeroes[Math.floor(Math.random() * shuffledHeroes.length)]
-            : null;
+        // Assign hero only for full-random, random-heroes, and role-queue modes
+        if (['full-random', 'random-heroes', 'role-queue'].includes(mode)) {
+          if (mode === 'role-queue' && selectedRoles[player.id]) {
+            const playerRole = selectedRoles[player.id]?.toLowerCase();
+            const roleHeroes = shuffledHeroes.filter(h => 
+              h.role?.toLowerCase() === playerRole
+            );
+            hero = roleHeroes.length > 0 
+              ? roleHeroes[Math.floor(Math.random() * roleHeroes.length)]
+              : null; // No hero if no role-specific heroes available
+          } else {
+            hero = shuffledHeroes.length > 0
+              ? shuffledHeroes[Math.floor(Math.random() * shuffledHeroes.length)]
+              : null;
+          }
         }
 
         newAssignments[player.id] = {
@@ -140,7 +145,7 @@ export default function TeamGenerator({
       setAssignments(newAssignments);
       prevDataRef.current = { players, heroes };
     }
-  }, [players, heroes, mode, teamComp, selectedRoles]);
+  }, [players, heroes, mode, teamComp, selectedRoles, shuffleArray, generateTeamComposition]);
 
   const team1Players = Object.entries(assignments)
     .filter(([_, a]) => a.team === 'team1')
@@ -188,7 +193,7 @@ export default function TeamGenerator({
                 {hero && (
                   <span className="hero-info">
                     as <span className="hero-name">{hero.name}</span>
-                    <span className="hero-role">{hero.role}</span>
+                    <span className="hero-role">({hero.role})</span>
                   </span>
                 )}
               </div>
@@ -208,7 +213,7 @@ export default function TeamGenerator({
                 {hero && (
                   <span className="hero-info">
                     as <span className="hero-name">{hero.name}</span>
-                    <span className="hero-role">{hero.role}</span>
+                    <span className="hero-role">({hero.role})</span>
                   </span>
                 )}
               </div>

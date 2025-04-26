@@ -7,7 +7,6 @@ function LobbyScreen({ onJoinLobby, players = [], onReadyUp }) {
   const [modeVote, setModeVote] = useState(null);
   const [isReady, setIsReady] = useState(false);
   const [teamCompVote, setTeamCompVote] = useState(null);
-  const [currentPlayerId, setCurrentPlayerId] = useState(null);
   const [selectedRole, setSelectedRole] = useState(null);
 
   const gameModes = [
@@ -31,6 +30,7 @@ function LobbyScreen({ onJoinLobby, players = [], onReadyUp }) {
   ];
 
   const handleStartGame = () => {
+    console.log('Sending start_game message:', { modeVote, teamCompVote, selectedRole });
     sendWebSocketMessage({
       type: 'start_game',
       settings: {
@@ -46,7 +46,6 @@ function LobbyScreen({ onJoinLobby, players = [], onReadyUp }) {
     if (modeVote === 'role-queue' && !selectedRole) return;
     
     const playerId = uuidv4();
-    setCurrentPlayerId(playerId);
     onJoinLobby({
       playerName,
       modeVote,
@@ -161,8 +160,8 @@ function LobbyScreen({ onJoinLobby, players = [], onReadyUp }) {
               className="player-item"
             >
               <span className="player-name">{player.name}</span>
-              {player.selectedRole && (
-                <span className="player-role">({player.selectedRole})</span>
+              {player.settings?.selectedRole && (
+                <span className="player-role">({player.settings.selectedRole})</span>
               )}
               {player.isReady && (
                 <span className="ready-indicator">✓ Ready</span>

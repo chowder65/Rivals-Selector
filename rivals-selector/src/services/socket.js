@@ -21,11 +21,17 @@ const createSocket = (url, messageHandler) => {
       console.log('WebSocket connected');
       reconnectAttempts = 0;
       isManualClose = false;
+      // Send initial handshake
+      socket.send(JSON.stringify({
+        type: 'client_connect',
+        device: /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ? 'mobile' : 'desktop'
+      }));
     };
   
     socket.onmessage = (event) => {
       try {
         const message = JSON.parse(event.data);
+        console.log('Received message:', message);
         if (message.type === 'connection_ack') {
           connectionId = message.connectionId;
         }
@@ -46,6 +52,11 @@ const createSocket = (url, messageHandler) => {
   
     socket.onerror = (error) => {
       console.error('WebSocket error:', error);
+      if (error && error.code === 'ECONNREFUSED' && reconnectAttempts < MAX_RETRIES) {
+        const delay = Math.min(BASE_DELAY * Math.pow(2, reconnectAttempts), 30000);
+        reconnectAttempts++;
+        setTimeout(() => createSocket(url, messageHandler), delay);
+      }
     };
 };
 
@@ -64,12 +75,23 @@ export const connectWebSocket = (url, messageHandler) => {
 
 export const sendWebSocketMessage = (message) => {
   if (socket?.readyState === WebSocket.OPEN) {
-    socket.send(JSON.stringify({
+    const fullMessage = {
       ...message,
       connectionId,
-      timestamp: Date.now()
-    }));
+      timestamp: Date.now(),
+      deviceType: /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ? 'mobile' : 'desktop'
+    };
+    console.log('Sending message:', fullMessage);
+    socket.send(JSON.stringify(fullMessage));
   } else {
     console.warn('Cannot send - WebSocket not connected');
+    // Queue message for when connection is restored
+    if (message.type !== 'heartbeat') {
+      setTimeout(() => sendWebSocketMessage(message), 1000);
+    }
   }
+};
+
+export const getSocketStatus = () => {
+  return socket?.readyState || WebSocket.CLOSED;
 };
